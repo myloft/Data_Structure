@@ -5,7 +5,7 @@ using namespace std;
 int main() {
 	BinaryTree<int> bt;
 	int c = 0;
-	int tmp1,tmp2;
+	int tmp1,tmp2,tmp3;
 	while (c != 16) {
 		cout << endl << "1. 创建二叉树";
 		cout << endl << "2. 中序遍历";
@@ -59,7 +59,42 @@ int main() {
 				break;
 			}
 			cout << "不存在";
-		//case 8:
+		case 8:
+			cout << "输入元素";
+			cin >> tmp1;
+			if (bt.GetParent(tmp1,tmp2)) {
+				cout << "父元素为:" << tmp2;
+				break;
+			}
+			cout << "不存在";
+			break;
+		case 9:
+			cout << "输入元素";
+			cin >> tmp1;
+			if (bt.GetLeftSibling(tmp1,tmp2)) {
+				cout << "左兄弟为:" << tmp2;
+				break;
+			}
+			cout << "不存在";
+			break;
+		case 10:
+			cout << "输入元素:";
+			cin >> tmp1;
+			cout <<"输入左孩子:";
+			cin >> tmp2;
+			cout << "输入右孩子:";
+			cin >> tmp3;
+			if (bt.InsertChild(tmp1,tmp2,tmp3)) {
+				cout << "修改完成" ;
+				break;
+			}
+			cout << "修改失败";
+			break;
+		case 11:
+			cout << "输入元素:";
+			cin >> tmp1;
+			cout << "修改为:";
+			cin >> tmp2;
 		}
 	}
 	return 0;

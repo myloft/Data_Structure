@@ -2,7 +2,10 @@
 #ifndef __BINNARY_TREE_H__
 #define __BINNARY_TREE_H__
 #include "bin_tree_node.h"
+#include "lk_queue.h"
+#include <iostream>
 #include <cstdlib>
+using namespace std;
 // 二叉树类模板
 template <class ElemType>
 class BinaryTree
@@ -30,6 +33,7 @@ private:
 	void Clear(BinTreeNode<ElemType> *r);
 	void DisplayTreeeHelp(BinTreeNode<ElemType> *r, int level);
 	// 按树状形式显示以r为根的二叉树，level为层次数，可设根结点的层次数为1
+	int size;
 public:
 	//  二叉树公共方法声明:
 	BinaryTree();											// 无参数的构造函数模板
@@ -141,8 +145,8 @@ void BinaryTree<ElemType>::CreateBiTree()
 	r->data = x;
 	r->leftChild = r->rightChild = NULL;
 	root = r;
-	creat(r, 0, empty, end);   //创建根结点的左子树
-	creat(r, 1, empty, end);   //创建根结点的右子树
+	Creat(r, 0, empty, end);   //创建根结点的左子树
+	Creat(r, 1, empty, end);   //创建根结点的右子树
 }
 template <class ElemType>
 void BinaryTree<ElemType>::Creat(BinTreeNode<ElemType> *r,int flag, ElemType empty, ElemType end)
@@ -156,8 +160,8 @@ void BinaryTree<ElemType>::Creat(BinTreeNode<ElemType> *r,int flag, ElemType emp
 		if (flag == 0) r->leftChild = p;  //p为左子树
 		else r->rightChild = p;       //p为右子树
 		size++;
-		creat(p, 0, empty, end);           //递归创建左子树
-		creat(p, 1, empty, end);           //递归创建右子树
+		Creat(p, 0, empty, end);           //递归创建左子树
+		Creat(p, 1, empty, end);           //递归创建右子树
 	}
 }
 template <class ElemType>
@@ -172,7 +176,7 @@ Locate(BinTreeNode<ElemType> *r, ElemType e) //private
 	if (r == NULL)     return  NULL;
 	if (r->data == e)     return r;
 	BinTreeNode<ElemType> *p = Locate(r->leftChild, e);
-	if (p == NULL)    p = Locate(r->RightChild, e);
+	if (p == NULL)    p = Locate(r->rightChild, e);
 	return p;
 }
 template <class ElemType>
@@ -197,9 +201,9 @@ template <class ElemType>
 int BinaryTree<ElemType>::GetLeft(ElemType e, ElemType &c)       //Public
 {
 	BinTreeNode<ElemType>* p = LeftChild(e);
-	if (p == NULL) return FALSE;	//e无左孩子
+	if (p == NULL) return false;	//e无左孩子
 	c = p->data;
-	return TRUE;
+	return true;
 }
 template <class ElemType>
 BinTreeNode<ElemType>* BinaryTree<ElemType>::Parent(BinTreeNode<ElemType>*r, ElemType e) //private
@@ -209,7 +213,7 @@ BinTreeNode<ElemType>* BinaryTree<ElemType>::Parent(BinTreeNode<ElemType>*r, Ele
 	if ((r->leftChild != NULL&&r->leftChild->data == e) ||
 		(r->rightChild != NULL&&r->rightChild->data == e))
 		return  r;    //r是e的父结点，返回结点r的指针
-	p = Parent(r->leftChild, e)    //递归调用r的左子树
+	p = Parent(r->leftChild, e);    //递归调用r的左子树
 		if (p == NULL)    p = Parent(r->rightChild, e);
 	return p;
 }
@@ -217,11 +221,11 @@ template <class ElemType>
 int BinaryTree<ElemType>::GetParent(ElemType e, ElemType &f) //public
 {
 	if (root == NULL || root->data == e)
-		return FALSE;
+		return false;
 	BinTreeNode<ElemType> *p = Parent(root, e);
-	if (p == NULL)  return FALSE;  //树中无元素e
+	if (p == NULL)  return false;  //树中无元素e
 	f = p->data;
-	return TRUE;
+	return true;
 }
 template <class ElemType>
 BinTreeNode<ElemType>* BinaryTree<ElemType>::
@@ -238,11 +242,11 @@ template <class ElemType>
 int BinaryTree<ElemType>::
 GetLeftSibling(ElemType e, ElemType &s)
 {
-	if (root->data == e)return FALSE; //根结点无兄弟
+	if (root->data == e)return false; //根结点无兄弟
 	BinTreeNode<ElemType> *p = LeftSibling(e);
-	if (p == NULL)return FALSE; //e无左兄弟
+	if (p == NULL)return false; //e无左兄弟
 	s = p->data;
-	return TRUE;
+	return true;
 }
 template <class ElemType>
 int BinaryTree<ElemType>::
@@ -250,7 +254,7 @@ InsertChild(ElemType e, ElemType x, ElemType y)
 {
 	BinTreeNode<ElemType> *ep, *xp, *yp;
 	ep = Locate(root, e);  //定位元素e
-	if (ep == NULL) return FALSE; //找不到元素e
+	if (ep == NULL) return false; //找不到元素e
 	xp = new BinTreeNode<ElemType>;
 	xp->data = x;
 	xp->rightChild = NULL;
@@ -262,16 +266,16 @@ InsertChild(ElemType e, ElemType x, ElemType y)
 	yp->rightChild = ep->rightChild;
 	ep->rightChild = yp; //结点y置为结点e的右孩子
 	size = size + 2;
-	return TRUE;
+	return true;
 }
 template <class ElemType>
 int BinaryTree<ElemType>::
 SetElem(ElemType  e, ElemType  x)
 {
 	BinTreeNode<ElemType> *p = Locate(root, e);
-	if (p == NULL)   return FALSE;
+	if (p == NULL)   return false;
 	p->data = x;
-	return TRUE;
+	return true;
 }
 template <class ElemType>
 int BinaryTree<ElemType>::Size()  //public
@@ -333,7 +337,7 @@ template <class ElemType>
 BinaryTree<ElemType>:: ~BinaryTree()
 {
 	Clear(root);
-	root = NULL:
+	root = NULL;
 }
 template <class ElemType>
 void BinaryTree<ElemType>::DisplayTree()
