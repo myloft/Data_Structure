@@ -6,7 +6,7 @@ int main() {
 	BinaryTree<int> bt;
 	int c = 0;
 	int tmp1,tmp2,tmp3;
-	while (c != 16) {
+	while (c != 15) {
 		cout << endl << "1. 创建二叉树";
 		cout << endl << "2. 中序遍历";
 		cout << endl << "3. 先序遍历";
@@ -18,12 +18,11 @@ int main() {
 		cout << endl << "9. 读取左兄弟";
 		cout << endl << "10. 插入左右孩子";
 		cout << endl << "11. 更新元素";
-		cout << endl << "12. 读取父元素";
-		cout << endl << "13. 叶子结点个数";
-		cout << endl << "14. 图形显示";
-		cout << endl << "15. 销毁二叉树";
-		cout << endl << "16. 退出";
-		cout << endl << "选择功能(1~16):";
+		cout << endl << "12. 叶子结点个数";
+		cout << endl << "13. 图形显示";
+		cout << endl << "14. 销毁二叉树";
+		cout << endl << "15. 退出";
+		cout << endl << "选择功能(1~15):";
 		cin >> c;
 		switch (c)
 		{
@@ -60,7 +59,7 @@ int main() {
 			}
 			cout << "不存在";
 		case 8:
-			cout << "输入元素";
+			cout << "输入元素:";
 			cin >> tmp1;
 			if (bt.GetParent(tmp1,tmp2)) {
 				cout << "父元素为:" << tmp2;
@@ -69,7 +68,7 @@ int main() {
 			cout << "不存在";
 			break;
 		case 9:
-			cout << "输入元素";
+			cout << "输入元素:";
 			cin >> tmp1;
 			if (bt.GetLeftSibling(tmp1,tmp2)) {
 				cout << "左兄弟为:" << tmp2;
@@ -95,6 +94,24 @@ int main() {
 			cin >> tmp1;
 			cout << "修改为:";
 			cin >> tmp2;
+			if (bt.SetElem(tmp1, tmp2)) {
+				cout << "修改成功";
+				break;
+			}
+			cout << "修改失败";
+			break;
+		case 12:
+			cout << "叶子结点个数:" << bt.Leaf();
+			break;
+		case 13:
+			bt.DisplayTree();
+			break;
+		case 14:
+			bt.~BinaryTree();
+			cout << "销毁成功";
+			break;
+		case 15:
+			exit(0);
 		}
 	}
 	return 0;

@@ -340,23 +340,23 @@ BinaryTree<ElemType>:: ~BinaryTree()
 	root = NULL;
 }
 template <class ElemType>
-void BinaryTree<ElemType>::DisplayTree()
-{
-	DisplayTreeHelp(root, 1);
-	cout << endl;
-}
-template <class ElemType>
 void BinaryTree<ElemType>::DisplayTreeeHelp(BinTreeNode<ElemType> *r, int level)
 {
 	if (r != NULL)
 	{
-		DisplayTreeHelp(r->rightChild, level + 1);
+		DisplayTreeeHelp(r->rightChild, level + 1);
 		//显示右子树
 		cout << endl;	                //显示新行	
 		for (int i = 0; i < level - 1; i++)
 			cout << " ";	     //确保在第level列显示结点
 		cout << r->data;	    //显示结点
-		DisplayTreeHelp(r->leftChild, level + 1);
+		DisplayTreeeHelp(r->leftChild, level + 1);
 	}
+}
+template <class ElemType>
+void BinaryTree<ElemType>::DisplayTree()
+{
+	DisplayTreeeHelp(root, 1);
+	cout << endl;
 }
 #endif
