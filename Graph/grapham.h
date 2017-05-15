@@ -1,339 +1,382 @@
-﻿#include "lkqueue.h"
+﻿#ifndef __GRAPHAM_H__
+#define __GRAPHAM_H__
+
 #include "veram.h"
 #include <iostream>
-using namespace std;
+#include <queue>
 
-template <class ElemType>
+#define INFINITE (100000000)
+
+template<class T>
 class GraphAM {
+protected:
+    int size = 0;                   // 最大顶点数
+    int verNum = 0, edgeNum = 0; // 当前的顶点数和边数
+    int kind;   // 0无向图，1有向图，2无向网，3有向网
+    VerAM<T> *vertex; // 顶点元素表
+    int **edge;
+    bool *visited; // 标记是否被访问
+
+    int LocateVex(T e);   // 定位顶点，返回顶点的序号
+    int FirstAdjVex(T e); // 返回指定顶点的第一个邻接顶点
+    int FirstAdjVex(int pos, int s);
+
+    int NextAdjVex(int v, int pos);
+
+    bool EdgeExist(T s, T e);
+
+    bool SetWeight(T s, T e, int w);
+
+    void DFSHelp(int start);
+
+    void BFSHelp(int start);
+
 public:
-    int size;
-    int verNum;
-    int edgeNum;
-    int kind;
-    VerAM<ElemType> * vertex;
-    int ** edge;
-    void InitGraph(int k, int n);
+    GraphAM() = default;
+
+    ~GraphAM() { DestroyGraph(); }
+
+    void InitGraph(int kind, int n);
+
     void Clear();
-    void DestoryGraph();
+
+    void DestroyGraph();
+
     void CreateGraph();
-    int LocateVer(ElemType e);
-    int InsertVer(ElemType e);
-    bool InsertEdge(ElemType s, ElemType e);
-    bool InsertEdge(ElemType s, ElemType e, int w);
-    void DeleteEdge(ElemType s, ElemType e);
-    void DeleteVer(ElemType e);
-    int SetElem(ElemType e, ElemType x);
-    int FirstAdjVer(ElemType e);
-    int PFirstAdjVer(int pos);
-    int FirstAdjVer(int pos, int s);
-    int NextAdjVer(int v, int pos);
-    int EdgeExsit(ElemType s, ElemType e);
-    int SetWeight(ElemType s, ElemType e, int w);
+
     void Display();
-    void TraverseDFS(int start);
-    int DFS(int s, int tag[]);
-    void BFS(int start);
+
+    int GetKind() { return kind; }
+
+    int InsertVex(T e);
+
+    bool InsertEdge(T s, T e);
+
+    bool InsertEdge(T s, T e, int w);
+
+    bool DeleteEdge(T s, T e);
+
+    bool DeleteVex(T e);
+
+    bool SetElem(T e, T x); // 设置顶点的元素值
+    bool DFS(T e);
+
+    bool BFS(T e);
 };
 
-template <class ElemType>
-void
-GraphAM<ElemType>::InitGraph(int k, int n) {
-	size=n;
-	kind=k;
+template<class T>
+void GraphAM<T>::InitGraph(int k, int n) {
+    size = n;
+    kind = k;
     verNum = edgeNum = 0;
-    vertex = new VerAM<ElemType>[size];
-    for (int i = 0; i < size; i++)
-        vertex[i].flag = 0;
+
+    vertex = new VerAM<T>[size];
+
+    for (int i = 0; i < size; ++i)
+        vertex[i].flag = false;
+
     edge = new int *[size];
-    for (int i = 0; i < n; i++) {
+
+    for (int i = 0; i < size; ++i) {
         edge[i] = new int[size];
-        for (int j = 0; j < size; j++) {
+        for (int j = 0; j < size; ++j)
             if (kind < 2)
                 edge[i][j] = 0;
             else
-                edge[i][j] = 65535;
-        }
+                edge[i][j] = INFINITE;
     }
+    visited = new bool[size];
 }
 
-template <class ElemType>
-void
-GraphAM<ElemType>::Clear() {
-    for (int i = 0; i < size; i++)
-        for (int j = 0; j < size; j++)
+template<class T>
+void GraphAM<T>::Clear() {
+    for (int i = 0; i < size; ++i)
+        for (int j = 0; j < size; ++j)
             if (kind < 2)
                 edge[i][j] = 0;
             else
-                edge[i][j] = 65535;
+                edge[i][j] = INFINITE;
     edgeNum = 0;
-    for (int i = 0; i < size; i++)
-        vertex[i].flag = 0;
+    for (int i = 0; i < size; ++i)
+        vertex[i].flag = false;
+
     verNum = 0;
 }
 
-template <class ElemType>
-void
-GraphAM<ElemType>::CreateGraph() {
-    int v1,v2,n = 0;
+template<class T>
+void GraphAM<T>::DestroyGraph() {
+    delete[] vertex;
+    for (int i = 0; i < size; ++i)
+        delete[] edge[i];
+    delete[] edge;
+    delete[] visited;
+}
+
+template<class T>
+void GraphAM<T>::CreateGraph() {
+    int i, j, n = 0;
     char answer;
-    if (verNum > 0) Clear();
-    cout << "请输入图的顶点个数：";
-    cin>>verNum;
-    while (1) {
-        if (verNum > size){
-            cout << "顶点个数溢出！请重新输入：" << endl;
-            cin >> verNum;
-        }
-        else{
+    if (verNum > 0)
+        Clear();
+    std::cout << "请输入图的顶点数：";
+    while (true) {
+        std::cin >> verNum;
+        if (verNum > size)
+            std::cout << "顶点个数溢出，请重新输入：" << std::endl;
+        else
             break;
-        }
     }
-    cout << "请输入各个顶点的值：" << endl;
-    for (int i = 0; i < verNum; i++) {
-        cin >> vertex[i].elem;
-        vertex[i].flag = 1;
+    std::cout << "请输入各个顶点的值：" << std::endl;
+    for (int i = 0; i < verNum; ++i) {
+        std::cin >> vertex[i].elem;
+        vertex[i].flag = true;
     }
-    int i = 0;
-    int j = 0;
-    while (1) {
-        cout << "请输入一条边／弧的两端顶点的下标：" << endl;
-        cin >> v1 >> v2;
-        i=LocateVer(v1);
-        j=LocateVer(v2);
+    while (true) {
+        std::cout << "请输入一条边的两端顶点的下标：" << std::endl;
+        std::cin >> i >> j;
         if (kind < 2) {
             edge[i][j] = 1;
-            if (kind == 0) edge[j][i] = 1;
+            if (kind == 0)
+                edge[j][i] = 1;
         } else {
-            cout << "请输入该边/弧的权值：";
-            cin >> edge[i][j];
-            if (kind == 2) edge[j][i] = edge[i][j];
+            std::cout << "请输入该边的权值：";
+            std::cin >> edge[i][j];
+            if (kind == 2)
+                edge[j][i] = edge[i][j];
         }
         n++;
-        cout << "继续构造边／弧吗？（Y/ N）";
-        cin >> answer;
-        if (answer == 'N' || answer == 'n') break;
+        std::cout << "继续构造边吗？（Y/N）";
+        std::cin >> answer;
+        if (answer == 'n' || answer == 'N')
+            break;
     }
     edgeNum = n;
 }
 
-template <class ElemType>
-int
-GraphAM<ElemType>::LocateVer(ElemType e) {
-    for (int i = 0; i < size; i++)
-        if (vertex[i].flag == 1 && vertex[i].elem == e) return i;
+template<class T>
+int GraphAM<T>::LocateVex(T e) {
+    for (int i = 0; i < size; ++i)
+        if (vertex[i].flag && vertex[i].elem == e)
+            return i;
     return -1;
 }
 
-template <class ElemType>
-int
-GraphAM<ElemType>::InsertVer(ElemType e) {
-    if (verNum + 1 > size) return -1;
-    int j;
-    for (j = 0; j < size; j++)
-        if (vertex[j].flag == 0) {
-            vertex[j].elem = e;
-            vertex[j].flag = 1;
+template<class T>
+int GraphAM<T>::InsertVex(T e) {
+    if (verNum + 1 > size)
+        return -1;
+    int i;
+    for (i = 0; i < size; ++i)
+        if (vertex[i].flag == false) {
+            vertex[i].elem = e;
+            vertex[i].flag = true;
             break;
         }
     verNum++;
-    return j;
+    return i;
 }
 
-template <class ElemType>
-bool
-GraphAM<ElemType>::InsertEdge(ElemType s, ElemType e) {
-    int i = LocateVer(s);
-    int j = LocateVer(e);
-    if (i < 0 || j < 0) return false;
-    if (edge[i][j] != 0) return false;
+template<class T>
+bool GraphAM<T>::InsertEdge(T s, T e) {
+    int i = LocateVex(s);
+    int j = LocateVex(e);
+    if (i < 0 || j < 0)
+        return false;
+    if (edge[i][j] != 0)
+        return false;
     edge[i][j] = 1;
-    if (kind == 0) edge[j][i] = 1;
+    if (kind == 0)
+        edge[j][i] = 1;
     edgeNum++;
     return true;
 }
 
-template <class ElemType>
-bool
-GraphAM<ElemType>::InsertEdge(ElemType s, ElemType e, int w) {
-    int i = LocateVer(s);
-    int j = LocateVer(e);
-    if (i < 0 || j < 0) return false;
-    if (edge[i][j] != 65535) return false;
+template<class T>
+bool GraphAM<T>::InsertEdge(T s, T e, int w) {
+    int i = LocateVex(s);
+    int j = LocateVex(e);
+    if (i < 0 || j < 0)
+        return false;
+    if (edge[i][j] != INFINITE)
+        return false;
     edge[i][j] = w;
-    if (kind == 2) edge[j][i] = w;
+    if (kind == 2)
+        edge[j][j] = w;
     edgeNum++;
     return true;
 }
 
-template <class ElemType>
-void
-GraphAM<ElemType>::DeleteEdge(ElemType s, ElemType e) {
-    int i = LocateVer(s);
-    int j = LocateVer(e);
-    if (i < 0 || j < 0) return;
+template<class T>
+bool GraphAM<T>::DeleteEdge(T s, T e) {
+    int i = LocateVex(s);
+    int j = LocateVex(e);
+    if (i < 0 || j < 0)
+        return false;
     if (kind < 2) {
         edge[i][j] = 0;
-        if (kind == 0) edge[j][i] = 0;
+        if (kind == 0)
+            edge[j][i] = 0;
     } else {
-        edge[i][j] = 65535;
-        if (kind == 2) edge[i][j] = 65535;
+        edge[i][j] = INFINITE;
+        if (kind == 2)
+            edge[j][i] = INFINITE;
     }
     edgeNum--;
+    return true;
 }
 
-template <class ElemType>
-void
-GraphAM<ElemType>::DeleteVer(ElemType e) {
-    int pos = LocateVer(e);
-    if (pos < 0) return;
-    vertex[pos].flag = 0;
+template<class T>
+bool GraphAM<T>::DeleteVex(T e) {
+    int pos = LocateVex(e);
+    if (pos < 0)
+        return false;
+    vertex[pos].flag = false;
     verNum--;
     if (kind < 2) {
-        for (int j = 0; j < size; j++)
+        for (int j = 0; j < size; ++j)
             if (edge[pos][j] == 1) {
                 edge[pos][j] = 0;
-                if (kind == 0) edge[j][pos] = 0;
+                if (kind == 0)
+                    edge[j][pos] = 0;
                 edgeNum--;
             }
     } else {
         for (int j = 0; j < size; j++)
-            if (edge[pos][j] != 65535) {
-                edge[pos][j] = 65535;
-                if (kind == 2) edge[j][pos] = 65535;
+            if (edge[pos][j] != INFINITE) {
+                edge[pos][j] = INFINITE;
+                if (kind == 2)
+                    edge[j][pos] = INFINITE;
                 edgeNum--;
             }
     }
+    return true;
 }
 
-template <class ElemType>
-int
-GraphAM<ElemType>::SetElem(ElemType e, ElemType x) {
-    int pos = LocateVer(e);
-    if (pos < 0) return false;
+template<class T>
+bool GraphAM<T>::SetElem(T e, T x) {
+    int pos = LocateVex(e);
+    if (pos < 0)
+        return false;
     vertex[pos].elem = x;
     return true;
 }
 
-template <class ElemType>
-int
-GraphAM<ElemType>::FirstAdjVer(ElemType e) {
-    int pos = LocateVer(e);
-    if (pos < 0) return -1;
-    return PFirstAdjVer(pos);
+template<class T>
+int GraphAM<T>::FirstAdjVex(T e) {
+    int pos = LocateVex(e);
+    if (pos < 0)
+        return -1;
+    return FirstAdjVex(pos, 0);
 }
 
-template <class ElemType>
-int
-GraphAM<ElemType>::PFirstAdjVer(int pos) {
+template<class T>
+int GraphAM<T>::FirstAdjVex(int pos, int s) {
+    if (pos < 0)
+        return -1;
     if (kind < 2) {
-        for (int j = 0; j < size; j++)
-            if (j != pos && edge[pos][j] == 1) return j;
+        for (int j = s; j < size; j++)
+            if (j != pos && edge[pos][j] == 1)
+                return j;
     } else {
-        for (int j = 0; j < size; j++)
-            if (j != pos && edge[pos][j] != 65536) return j;
+        for (int j = s; j < size; j++)
+            if (j != pos && edge[pos][j] != INFINITE)
+                return j;
     }
     return -1;
 }
 
-template <class ElemType>
-int
-GraphAM<ElemType>::NextAdjVer(int v, int pos) {
-	return FirstAdjVer(pos + 1, v);
+template<class T>
+int GraphAM<T>::NextAdjVex(int v, int pos) {
+    return FirstAdjVex(v, pos + 1);
 }
 
-template <class ElemType>
-int
-GraphAM<ElemType>::FirstAdjVer(int pos, int s) {
-    if (kind < 2) {
-        for (int j = s; j < size; j++)
-            if (j != pos && edge[pos][j] == 1) return j;
-    } else {
-        for (int j = s; j < size; j++)
-            if (j != pos && edge[pos][j] != 65535) return j;
-    }
-    return -1;
-}
-
-template <class ElemType>
-int
-GraphAM<ElemType>::EdgeExsit(ElemType s, ElemType e) {
-    int i = LocateVer(s);
-    int j = LocateVer(e);
-    if (i < 0 || j < 0) return false;
+template<class T>
+bool GraphAM<T>::EdgeExist(T s, T e) {
+    int i = LocateVex(s);
+    int j = LocateVex(e);
+    if (i < 0 || j < 0)
+        return false;
     if (kind < 2) {
         if (edge[i][j] == 1)
             return true;
         else
             return false;
-    } else if (edge[i][j] == 65535)
+    } else if (edge[i][j] == INFINITE)
         return false;
     else
         return true;
 }
 
-template <class ElemType>
-int
-GraphAM<ElemType>::SetWeight(ElemType s, ElemType e, int w) {
-    int i = LocateVer(s);
-    int j = LocateVer(e);
-    if (i < 0 || j < 0) return false;
-    if (edge[i][j] == 65535) return false;
+template<class T>
+bool GraphAM<T>::SetWeight(T s, T e, int w) {
+    int i = LocateVex(s);
+    int j = LocateVex(e);
+    if (i < 0 || j < 0 || edge[i][j] == INFINITE)
+        return false;
     edge[i][j] = w;
     return true;
 }
 
-template <class ElemType>
-void
-GraphAM<ElemType>::Display() {
+template<class T>
+bool GraphAM<T>::DFS(T e) {
+    int p = LocateVex(e);
+    if (p < 0)
+        return false;
+    for (int i = 0; i < size; i++)
+        visited[i] = false;
+    DFSHelp(p);
+    return true;
+}
+
+template<class T>
+void GraphAM<T>::DFSHelp(int start) {
+    visited[start] = true;
+    std::cout << vertex[start].elem << '\t';
+    for (int i = FirstAdjVex(start, 0); i != -1; i = NextAdjVex(start, i))
+        if (visited[i] == false)
+            DFSHelp(i);
+}
+
+template<class T>
+bool GraphAM<T>::BFS(T e) {
+    int p = LocateVex(e);
+    if (p < 0)
+        return false;
+    for (int i = 0; i < size; i++)
+        visited[i] = false;
+    BFSHelp(p);
+    return true;
+}
+
+template<class T>
+void GraphAM<T>::BFSHelp(int start) {
+    visited[start] = true;
+    std::cout << vertex[start].elem << '\t';
+    std::queue<int> q;
+    q.push(start);
+    while (!q.empty()) {
+        int t = q.front();
+        q.pop();
+        for (int w = FirstAdjVex(t, 0); w >= 0; w = NextAdjVex(t, w)) {
+            if (visited[w] == false) {
+                visited[w] = true;
+                std::cout << vertex[w].elem << '\t';
+                q.push(w);
+            }
+        }
+    }
+}
+
+template<class T>
+void GraphAM<T>::Display() {
+    if (verNum == 0)
+        return;
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
-            cout << edge[i][j] << " ";
+            std::cout << edge[i][j] << " ";
         }
-        cout << endl;
+        std::cout << std::endl;
     }
 }
 
-template <class ElemType>
-void
-GraphAM<ElemType>::TraverseDFS(int start) {
-    int m, ok;
-    m = ok = 0;
-    static int * tag = new int[size];
-    for (int i = 0; i < size; i++)
-        tag[i] = 0;
-    if (start > 0) {
-        m = DFS(start, tag);
-        if (m == verNum) ok = 1;
-    }
-    if (ok == 0) {
-        for (int i = 0; i < size; i++)
-            if (vertex[i].flag == 1 && tag[i] == 0) {
-                m = m + DFS(i, tag);
-                if (m == verNum) break;
-            }
-    }
-    for(int i=0;i<verNum;i++){
-    	cout<<tag[i]<<" ";
-    }
-	cout << endl;
-    delete[] tag;
-}
-
-template <class ElemType>
-int
-GraphAM<ElemType>::DFS(int s, int tag[]) {
-    int n = 0;
-    cout << vertex[s].elem << " ";
-    tag[s] = 1;
-    int pos = FirstAdjVer(s);
-    while (pos >= 0 && tag[pos] == 0) {
-        n += DFS(pos, tag);
-        pos = NextAdjVer(pos, s);
-    }
-    return n + 1;
-}
-
-template <class ElemType>
-void
-GraphAM<ElemType>::BFS(int start) {
-}
+#endif
