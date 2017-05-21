@@ -15,7 +15,8 @@ int main() {
     cout << "7.修改顶点的值" << endl;
     cout << "8.DFS遍历" << endl;
     cout << "9.BFS遍历" << endl;
-	cout << "10.退出" << endl;
+	cout << "10.Kruskal最小生成树" << endl;
+	cout << "11.退出" << endl;
     while (1) {
         cout << "输入选项：";
 		cin >> c;
@@ -83,7 +84,10 @@ int main() {
                 gp.BFS(s);
             }
                 break;
-            case 10:
+			case 10:
+				gp.kruskal();
+				break;
+			case 11:
 				exit(0);
         }
         cout << endl;

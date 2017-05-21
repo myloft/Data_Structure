@@ -1,11 +1,12 @@
 ﻿#ifndef __GRAPHAM_H__
 #define __GRAPHAM_H__
-
+#include "utility.h"
+#include "kruskal.h"					// Kruskal算法
 #include "veram.h"
-#include <iostream>
 #include <queue>
 
-#define INFINITE (100000000)
+#define INFINITE (1000000)
+//int infity = INFINITE;
 
 template<class T>
 class GraphAM {
@@ -44,11 +45,11 @@ public:
 
     void CreateGraph();
 
-    void Display();
-
     int GetKind() { return kind; }
 
     int InsertVex(T e);
+
+	void kruskal();
 
     bool InsertEdge(T s, T e);
 
@@ -59,7 +60,8 @@ public:
     bool DeleteVex(T e);
 
     bool SetElem(T e, T x); // 设置顶点的元素值
-    bool DFS(T e);
+    
+	bool DFS(T e);
 
     bool BFS(T e);
 };
@@ -72,32 +74,32 @@ void GraphAM<T>::InitGraph(int k, int n) {
 
     vertex = new VerAM<T>[size];
 
-    for (int i = 0; i < size; ++i)
+    for (int i = 0; i < size; i++)
         vertex[i].flag = false;
 
     edge = new int *[size];
 
-    for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < n; i++) {
         edge[i] = new int[size];
-        for (int j = 0; j < size; ++j)
+        for (int j = 0; j < size; j++)
             if (kind < 2)
                 edge[i][j] = 0;
             else
                 edge[i][j] = INFINITE;
     }
-    visited = new bool[size];
+	visited = new bool[size];
 }
 
 template<class T>
 void GraphAM<T>::Clear() {
-    for (int i = 0; i < size; ++i)
-        for (int j = 0; j < size; ++j)
+    for (int i = 0; i < size; i++)
+        for (int j = 0; j < size; j++)
             if (kind < 2)
                 edge[i][j] = 0;
             else
                 edge[i][j] = INFINITE;
     edgeNum = 0;
-    for (int i = 0; i < size; ++i)
+    for (int i = 0; i < size; i++)
         vertex[i].flag = false;
 
     verNum = 0;
@@ -106,15 +108,15 @@ void GraphAM<T>::Clear() {
 template<class T>
 void GraphAM<T>::DestroyGraph() {
     delete[] vertex;
-    for (int i = 0; i < size; ++i)
-        delete[] edge[i];
+    for (int j = 0; j < size; j++)
+        delete[] edge[j];
     delete[] edge;
     delete[] visited;
 }
 
 template<class T>
 void GraphAM<T>::CreateGraph() {
-    int i, j, n = 0;
+    int v1, v2, n = 0;
     char answer;
     if (verNum > 0)
         Clear();
@@ -126,14 +128,16 @@ void GraphAM<T>::CreateGraph() {
         else
             break;
     }
-    std::cout << "请输入各个顶点的值：" << std::endl;
-    for (int i = 0; i < verNum; ++i) {
+    std::cout << "请输入各个顶点的值：";
+    for (int i = 0; i < verNum; i++) {
         std::cin >> vertex[i].elem;
         vertex[i].flag = true;
     }
     while (true) {
-        std::cout << "请输入一条边的两端顶点的下标：" << std::endl;
-        std::cin >> i >> j;
+        std::cout << "请输入一条边的两端顶点的下标：";
+        std::cin >> v1 >> v2;
+		int i = LocateVex(v1);
+		int j = LocateVex(v2);
         if (kind < 2) {
             edge[i][j] = 1;
             if (kind == 0)
@@ -141,7 +145,7 @@ void GraphAM<T>::CreateGraph() {
         } else {
             std::cout << "请输入该边的权值：";
             std::cin >> edge[i][j];
-            if (kind == 2)
+			if (kind == 2)
                 edge[j][i] = edge[i][j];
         }
         n++;
@@ -155,7 +159,7 @@ void GraphAM<T>::CreateGraph() {
 
 template<class T>
 int GraphAM<T>::LocateVex(T e) {
-    for (int i = 0; i < size; ++i)
+    for (int i = 0; i < size; i++)
         if (vertex[i].flag && vertex[i].elem == e)
             return i;
     return -1;
@@ -166,7 +170,7 @@ int GraphAM<T>::InsertVex(T e) {
     if (verNum + 1 > size)
         return -1;
     int i;
-    for (i = 0; i < size; ++i)
+    for (i = 0; i < size; i++)
         if (vertex[i].flag == false) {
             vertex[i].elem = e;
             vertex[i].flag = true;
@@ -233,7 +237,7 @@ bool GraphAM<T>::DeleteVex(T e) {
     vertex[pos].flag = false;
     verNum--;
     if (kind < 2) {
-        for (int j = 0; j < size; ++j)
+        for (int j = 0; j < size; j++)
             if (edge[pos][j] == 1) {
                 edge[pos][j] = 0;
                 if (kind == 0)
@@ -368,15 +372,42 @@ void GraphAM<T>::BFSHelp(int start) {
 }
 
 template<class T>
-void GraphAM<T>::Display() {
-    if (verNum == 0)
-        return;
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
-            std::cout << edge[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
-}
+void GraphAM<T>::kruskal() {
+	
+	int *vexs = new int[verNum];
+	for (int i = 0; i < verNum; i++) {
+		vexs[i] = vertex[i].elem;
+	}
+	int **m = new int*[verNum];
+	for (int i = 0; i<verNum; i++)
+	{
+		m[i] = new int[verNum];
+	}
 
+	for (int u = 0; u < verNum; u++)
+	{	
+		for (int v = 0; v < verNum; v++)
+		{	
+			m[u][v] = edge[u][v];
+			cout << setw(4) << m[u][v] <<setw(4) << " ";
+		}
+		cout << endl;
+	}
+
+	AdjListUndirNetwork<int, int> net(vexs, verNum);
+	for (int u = 0; u < verNum; u++)
+	{	// 生成邻接矩阵的行
+		for (int v = 0; v < verNum; v++)
+		{	// 生成邻接矩阵元素的值
+			if (m[u][v] != INFINITE) net.InsertEdge(u, v, m[u][v]);
+		}
+	}
+
+	cout << "原网:";
+	Display(net);					// 显示网net
+	cout << endl;
+	cout << "Kruskal算法产生最小生成树的边:" << endl;
+	MiniSpanTreeKruskal(net);		// Kruskal算法
+	cout << endl;
+}
 #endif
